@@ -14,9 +14,6 @@ export default function Venue() {
                 <p className="mt-4 text-xl text-[#433F39]/80">
                     Domaine Grand Piquecaillou
                 </p>
-                <p className="mt-2 text-[#433F39]/60">
-                    Adresse complète, ville, code postal
-                </p>
 
                 <div className="mt-10 overflow-hidden rounded-2xl shadow-md">
                     <iframe

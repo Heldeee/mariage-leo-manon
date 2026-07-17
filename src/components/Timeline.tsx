@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { downloadICS } from "../services/ics";
 
 interface Event {
     time: string;
@@ -7,10 +8,10 @@ interface Event {
 }
 
 const events: Event[] = [
-    { time: "14h00", title: "Cérémonie civile", description: "Mairie de..." },
-    { time: "15h30", title: "Cérémonie laïque", description: "Domaine Grand Piquecaillou" },
-    { time: "17h00", title: "Cocktail", description: "Terrasse & jardins" },
-    { time: "20h00", title: "Dîner" },
+    { time: "14h00", title: "Célébration civile", description: "Mairie de Pessac" },
+    { time: "16h30", title: "Cérémonie laïque", description: "Domaine Grand Piquecaillou" },
+    { time: "18h00", title: "Vin d'honneur", description: "Terrasse & jardins" },
+    { time: "20h00", title: "Dîner extérieur" },
     { time: "23h00", title: "Soirée dansante" },
 ];
 
@@ -54,6 +55,15 @@ export default function Timeline() {
                     ))}
                 </div>
             </div>
+            <div className="text-center mt-12">
+                <button
+                    onClick={downloadICS}
+                    className="px-6 py-3 rounded-full bg-[#A8B79D] text-white transition hover:scale-105"
+                >
+                    Ajouter à mon calendrier
+                </button>
+            </div>
         </section>
+
     );
 }

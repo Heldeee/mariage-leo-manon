@@ -131,9 +131,7 @@ export default function Hero({ guest }: Props) {
                         delay: 2
                     }}
                     onClick={() => {
-                        document
-                            .getElementById("rsvp")
-                            ?.scrollIntoView();
+                        document.getElementById("countdown")?.scrollIntoView({ behavior: "smooth" });
                     }}
                     className="
             mt-12
