@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import domaineVideo from "../assets/videos/domaine.mp4";
+import heroBackground from "../assets/images/photo1.jpg";
 import type Guest from "../types/guest";
 
 interface Props {
@@ -16,8 +16,8 @@ export default function Hero({ guest }: Props) {
         overflow-hidden
       "
         >
-            {/* Video background */}
-            <video
+            {/* Background */}
+            <img
                 className="
           absolute
           inset-0
@@ -25,11 +25,8 @@ export default function Hero({ guest }: Props) {
           w-full
           object-cover
         "
-                src={domaineVideo}
-                autoPlay
-                muted
-                loop
-                playsInline
+                src={heroBackground}
+                alt=""
             />
             {/* Overlay */}
             <div
