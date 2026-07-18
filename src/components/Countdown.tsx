@@ -27,16 +27,17 @@ export default function Countdown() {
         const wrapper = wrapperRef.current;
         if (!canvas || !wrapper) return;
 
-        const ctx = canvas.getContext("2d")!;
+        const canvasElement = canvas;
+        const ctx = canvasElement.getContext("2d")!;
         const resize = () => {
-            canvas.width = wrapper.clientWidth;
-            canvas.height = wrapper.clientHeight;
+            canvasElement.width = wrapper.clientWidth;
+            canvasElement.height = wrapper.clientHeight;
             ctx.fillStyle = "#A8B79D";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(0, 0, canvasElement.width, canvasElement.height);
             ctx.fillStyle = "#433F39";
             ctx.font = "500 20px Inter, sans-serif";
             ctx.textAlign = "center";
-            ctx.fillText("✨", canvas.width / 2, canvas.height / 2);
+            ctx.fillText("✨", canvasElement.width / 2, canvasElement.height / 2);
         };
         resize();
         window.addEventListener("resize", resize);
@@ -49,13 +50,13 @@ export default function Countdown() {
         }
 
         function getPos(e: MouseEvent | TouchEvent) {
-            const rect = canvas.getBoundingClientRect();
+            const rect = canvasElement.getBoundingClientRect();
             const point = "touches" in e ? e.touches[0] : e;
             return { x: point.clientX - rect.left, y: point.clientY - rect.top };
         }
 
         function checkProgress() {
-            const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            const data = ctx.getImageData(0, 0, canvasElement.width, canvasElement.height).data;
             let cleared = 0;
             for (let i = 3; i < data.length; i += 4 * 20) {
                 if (data[i] === 0) cleared++;
@@ -79,21 +80,21 @@ export default function Countdown() {
             isScratching.current = false;
         }
 
-        canvas.addEventListener("mousedown", start);
-        canvas.addEventListener("mousemove", move);
-        canvas.addEventListener("mouseup", end);
-        canvas.addEventListener("touchstart", start);
-        canvas.addEventListener("touchmove", move);
-        canvas.addEventListener("touchend", end);
+        canvasElement.addEventListener("mousedown", start);
+        canvasElement.addEventListener("mousemove", move);
+        canvasElement.addEventListener("mouseup", end);
+        canvasElement.addEventListener("touchstart", start);
+        canvasElement.addEventListener("touchmove", move);
+        canvasElement.addEventListener("touchend", end);
 
         return () => {
             window.removeEventListener("resize", resize);
-            canvas.removeEventListener("mousedown", start);
-            canvas.removeEventListener("mousemove", move);
-            canvas.removeEventListener("mouseup", end);
-            canvas.removeEventListener("touchstart", start);
-            canvas.removeEventListener("touchmove", move);
-            canvas.removeEventListener("touchend", end);
+            canvasElement.removeEventListener("mousedown", start);
+            canvasElement.removeEventListener("mousemove", move);
+            canvasElement.removeEventListener("mouseup", end);
+            canvasElement.removeEventListener("touchstart", start);
+            canvasElement.removeEventListener("touchmove", move);
+            canvasElement.removeEventListener("touchend", end);
         };
     }, []);
 
