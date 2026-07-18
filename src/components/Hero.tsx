@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import domaineVideo from "../assets/videos/domaine.mp4";
+import domaineVideo from "../assets/videos/domaine.webm";
 import type Guest from "../types/guest";
 
 interface Props {

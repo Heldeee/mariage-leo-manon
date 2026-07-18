@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 
-// Remplace par tes vraies photos dans src/assets/images
-import photo1 from "../assets/images/photo1.jpg";
-import photo2 from "../assets/images/photo2.jpg";
-import photo3 from "../assets/images/photo3.jpg";
-import photo4 from "../assets/images/photo4.jpg";
+const photos = Object.values(
+    import.meta.glob("../assets/images/*.{png,jpg,jpeg,webp,avif,JPG}", {
+        eager: true,
+        import: "default",
+    })
+) as string[];
 
-const photos = [photo1, photo2, photo3, photo4];
 
 export default function Gallery() {
     const [selected, setSelected] = useState<string | null>(null);
