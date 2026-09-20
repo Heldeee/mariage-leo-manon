@@ -1,9 +1,7 @@
 # TODOs
 
-- Favicons
 - ajouter des photos ?
 - plus de decoration (vignes ? pailletes ?)
-- Changer "nos moments" par un truc plus perso
 
 ## RSVP public
 

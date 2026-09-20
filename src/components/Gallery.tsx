@@ -15,7 +15,7 @@ export default function Gallery() {
     return (
         <section className="px-6 py-24 bg-[#F8F5EF]">
             <h2 className="text-5xl text-center text-[#433F39]">
-                Nos moments
+                Les mariés...
             </h2>
             <div className="grid grid-cols-2 gap-4 mt-16 max-w-4xl mx-auto md:grid-cols-4">
                 {photos.map((photo, i) => (
