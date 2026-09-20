@@ -176,11 +176,11 @@ export default function RSVPForm() {
             </div>
 
             <button
-                    onClick={submit}
-                    disabled={submitting}
-                    className="w-full p-4 mt-10 text-white bg-[#A8B79D] rounded-full transition hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
-                >
-                    {submitting ? "Envoi..." : "Envoyer ma réponse"}
+                onClick={submit}
+                disabled={submitting}
+                className="w-full p-4 mt-10 text-white bg-[#A8B79D] rounded-full transition hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
+            >
+                {submitting ? "Envoi..." : "Envoyer ma réponse"}
             </button>
             {error && <p className="mt-4 text-center text-red-700">{error}</p>}
         </motion.section>
