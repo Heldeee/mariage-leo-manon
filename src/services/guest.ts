@@ -1,21 +1,17 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
-export async function getGuest(code:string){
-    const url =
-    `${API_URL}?code=${code}`;
-    console.log(url);
-    const response = await fetch(url, {
-      // Ajout pour forcer le suivi de la redirection, ce qui est crucial pour les requêtes GET avec CORS vers Google Apps Script.
-      redirect: 'follow'
-    });
-    const data =
-        await response.json();
-    console.log(data);
-    return data;
-
+export interface RSVPPerson {
+  nom: string;
+  prenom: string;
+  presence: "oui" | "non";
+  allergenes: string;
 }
 
-export async function sendRSVP(data: any) {
+export interface RSVPData {
+  personnes: RSVPPerson[];
+}
+
+export async function sendRSVP(data: RSVPData) {
   const response = await fetch(API_URL, {
     method: "POST",
     headers: {
@@ -24,5 +20,14 @@ export async function sendRSVP(data: any) {
     body: JSON.stringify(data),
     redirect: "follow",
   });
-  return response.json();
+  if (!response.ok) {
+    throw new Error(`RSVP request failed with status ${response.status}`);
+  }
+
+  const result = await response.json();
+  if (result.status !== "success") {
+    throw new Error(result.message || "RSVP request failed");
+  }
+
+  return result;
 }

@@ -1,12 +1,7 @@
 import { motion } from "framer-motion";
 import domaineVideo from "../assets/videos/domaine.webm";
-import type Guest from "../types/guest";
 
-interface Props {
-    guest: Guest | null;
-}
-
-export default function Hero({ guest }: Props) {
+export default function Hero() {
     return (
         <section
             className="
@@ -97,29 +92,6 @@ export default function Hero({ guest }: Props) {
                     Domaine Grand Piquecaillou
 
                 </motion.p>
-                {
-                    guest && (
-                        <motion.p
-                            initial={{
-                                opacity: 0,
-                                y: 20
-                            }}
-                            animate={{
-                                opacity: 1,
-                                y: 0
-                            }}
-                            transition={{
-                                delay: 1.5
-                            }}
-                            className="
-              mt-10
-              text-lg
-            "
-                        >
-                            Bienvenue {guest.nom_affichage} !
-                        </motion.p>
-                    )
-                }
                 <motion.button
                     initial={{
                         opacity: 0

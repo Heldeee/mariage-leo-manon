@@ -9,7 +9,7 @@ interface Event {
 
 const events: Event[] = [
     { time: "14h00", title: "Célébration civile", description: "Mairie de Pessac" },
-    { time: "16h30", title: "Cérémonie laïque", description: "Domaine Grand Piquecaillou" },
+    { time: "16h00", title: "Cérémonie laïque", description: "Domaine Grand Piquecaillou" },
     { time: "18h00", title: "Vin d'honneur", description: "Terrasse & jardins" },
     { time: "20h00", title: "Dîner extérieur" },
     { time: "23h00", title: "Soirée dansante" },

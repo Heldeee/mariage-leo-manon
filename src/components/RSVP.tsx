@@ -1,69 +1,54 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type Guest from "../types/guest";
-import { sendRSVP } from "../services/guest";
+import { sendRSVP, type RSVPPerson } from "../services/guest";
 
-interface Props {
-    guest: Guest;
-}
+const emptyPerson = (): RSVPPerson => ({
+    nom: "",
+    prenom: "",
+    presence: "oui",
+    allergenes: "",
+});
 
-function Stepper({
-    label,
-    value,
-    max,
-    onChange,
-}: {
-    label: string;
-    value: number;
-    max: number;
-    onChange: (v: number) => void;
-}) {
-    return (
-        <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-[#433F39]/10">
-            <span className="text-[#433F39]">{label}</span>
-            <div className="flex items-center gap-4">
-                <button
-                    type="button"
-                    onClick={() => onChange(Math.max(0, value - 1))}
-                    className="w-9 h-9 rounded-full bg-[#F8F5EF] text-[#433F39] text-lg leading-none hover:bg-[#A8B79D]/30 transition"
-                >
-                    −
-                </button>
-                <span className="w-6 text-center text-lg">{value}</span>
-                <button
-                    type="button"
-                    onClick={() => onChange(Math.min(max, value + 1))}
-                    className="w-9 h-9 rounded-full bg-[#F8F5EF] text-[#433F39] text-lg leading-none hover:bg-[#A8B79D]/30 transition"
-                >
-                    +
-                </button>
-            </div>
-        </div>
-    );
-}
-
-export default function RSVPForm({ guest }: Props) {
-    const [presence, setPresence] = useState<"oui" | "non" | null>(null);
-    const [adultes, setAdultes] = useState(guest.adultes);
-    const [enfants, setEnfants] = useState(guest.enfants);
-    const [allergies, setAllergies] = useState("");
-    const [message, setMessage] = useState("");
+export default function RSVPForm() {
+    const [personnes, setPersonnes] = useState<RSVPPerson[]>([emptyPerson()]);
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    function updatePerson(index: number, changes: Partial<RSVPPerson>) {
+        setPersonnes((current) => current.map((person, personIndex) =>
+            personIndex === index ? { ...person, ...changes } : person,
+        ));
+    }
+
+    function addPerson() {
+        setPersonnes((current) => [...current, emptyPerson()]);
+    }
+
+    function removePerson(index: number) {
+        setPersonnes((current) => current.filter((_, personIndex) => personIndex !== index));
+    }
 
     async function submit() {
+        const cleanedPeople = personnes.map((person) => ({
+            ...person,
+            nom: person.nom.trim(),
+            prenom: person.prenom.trim(),
+            allergenes: person.allergenes.trim(),
+        }));
+
+        if (cleanedPeople.some((person) => !person.nom || !person.prenom)) {
+            setError("Veuillez renseigner le nom et le prénom de chaque personne.");
+            return;
+        }
+
         setSubmitting(true);
+        setError(null);
         try {
-            await sendRSVP({
-                code: guest.code,
-                nom_affichage: guest.nom_affichage,
-                presence,
-                adultes: presence === "oui" ? adultes : 0,
-                enfants: presence === "oui" ? enfants : 0,
-                allergies,
-                message,
-            });
+            await sendRSVP({ personnes: cleanedPeople });
             setSubmitted(true);
+        } catch {
+            setError("Votre réponse n'a pas pu être envoyée. Veuillez réessayer.");
         } finally {
             setSubmitting(false);
         }
@@ -77,12 +62,10 @@ export default function RSVPForm({ guest }: Props) {
                 className="max-w-md mx-auto p-10 text-center"
             >
                 <h2 className="text-4xl text-[#433F39]">
-                    {presence === "oui" ? "Merci ❤️" : "Merci pour votre réponse"}
+                    Merci pour vos réponses ❤️
                 </h2>
                 <p className="mt-4 text-[#433F39]/70">
-                    {presence === "oui"
-                        ? "Votre présence a bien été enregistrée. Nous avons hâte de célébrer ce jour avec vous !"
-                        : "Nous sommes tristes de ne pas vous compter parmi nous, mais nous comprenons. Vous serez dans nos pensées ce jour-là."}
+                    Vos informations ont bien été enregistrées. Nous avons hâte de célébrer ce jour avec vous !
                 </p>
             </motion.div>
         );
@@ -99,94 +82,107 @@ export default function RSVPForm({ guest }: Props) {
                 Confirmez votre présence
             </h2>
             <p className="mt-4 text-center text-[#433F39]/70">
-                Bonjour {guest.nom_affichage}
+                Renseignez les informations de chaque personne concernée par ce faire-part.
             </p>
 
-            <div className="flex justify-center gap-4 mt-10">
+            <div className="mt-10 space-y-6">
+                <AnimatePresence initial={false}>
+                    {personnes.map((person, index) => (
+                        <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, height: 0, overflow: "hidden" }}
+                            className="p-5 space-y-5 bg-white border border-[#433F39]/10 rounded-2xl"
+                        >
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xl text-[#433F39]">Personne {index + 1}</h3>
+                                {personnes.length > 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => removePerson(index)}
+                                        className="text-sm text-[#433F39]/60 hover:text-[#433F39]"
+                                    >
+                                        Retirer
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <label className="text-sm text-[#433F39]/70">
+                                    Prénom
+                                    <input
+                                        value={person.prenom}
+                                        onChange={(event) => updatePerson(index, { prenom: event.target.value })}
+                                        className="w-full p-3 mt-2 bg-[#F8F5EF] border border-[#433F39]/15 rounded-xl focus:outline-none focus:border-[#A8B79D]"
+                                        autoComplete="given-name"
+                                        required
+                                    />
+                                </label>
+                                <label className="text-sm text-[#433F39]/70">
+                                    Nom
+                                    <input
+                                        value={person.nom}
+                                        onChange={(event) => updatePerson(index, { nom: event.target.value })}
+                                        className="w-full p-3 mt-2 bg-[#F8F5EF] border border-[#433F39]/15 rounded-xl focus:outline-none focus:border-[#A8B79D]"
+                                        autoComplete="family-name"
+                                        required
+                                    />
+                                </label>
+                            </div>
+
+                            <div>
+                                <p className="text-sm text-[#433F39]/70">Présence</p>
+                                <div className="flex flex-wrap gap-3 mt-2">
+                                    {(["oui", "non"] as const).map((value) => (
+                                        <button
+                                            type="button"
+                                            key={value}
+                                            onClick={() => updatePerson(index, { presence: value })}
+                                            className={`rounded-full px-5 py-2 transition ${person.presence === value
+                                                ? value === "oui" ? "bg-[#A8B79D] text-white" : "bg-[#433F39] text-white"
+                                                : "bg-[#F8F5EF] text-[#433F39] border border-[#433F39]/15 hover:border-[#A8B79D]"
+                                                }`}
+                                        >
+                                            {value === "oui" ? "Présent(e)" : "Absent(e)"}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-sm text-[#433F39]/70">
+                                    Allergènes ou restrictions alimentaires
+                                </label>
+                                <textarea
+                                    value={person.allergenes}
+                                    onChange={(event) => updatePerson(index, { allergenes: event.target.value })}
+                                    placeholder="Aucun, ou précisez ici..."
+                                    className="w-full p-3 mt-2 bg-[#F8F5EF] border border-[#433F39]/15 rounded-xl focus:outline-none focus:border-[#A8B79D]"
+                                    rows={2}
+                                />
+                            </div>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+
                 <button
-                    onClick={() => setPresence("oui")}
-                    className={`rounded-full px-8 py-3 transition ${presence === "oui"
-                            ? "bg-[#A8B79D] text-white"
-                            : "bg-white text-[#433F39] border border-[#433F39]/15 hover:border-[#A8B79D]"
-                        }`}
+                    type="button"
+                    onClick={addPerson}
+                    className="w-full p-3 text-[#433F39] bg-white border border-dashed border-[#433F39]/25 rounded-xl transition hover:border-[#A8B79D]"
                 >
-                    Nous serons présents
-                </button>
-                <button
-                    onClick={() => setPresence("non")}
-                    className={`rounded-full px-8 py-3 transition ${presence === "non"
-                            ? "bg-[#433F39] text-white"
-                            : "bg-white text-[#433F39] border border-[#433F39]/15 hover:border-[#433F39]/40"
-                        }`}
-                >
-                    Nous ne pourrons pas venir
+                    + Ajouter une personne
                 </button>
             </div>
 
-            <AnimatePresence mode="wait">
-                {presence === "oui" && (
-                    <motion.div
-                        key="oui"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mt-10 space-y-4 overflow-hidden"
-                    >
-                        <Stepper label="Adultes" value={adultes} max={guest.adultes} onChange={setAdultes} />
-                        <Stepper label="Enfants" value={enfants} max={guest.enfants} onChange={setEnfants} />
-
-                        <div>
-                            <label className="text-sm text-[#433F39]/70">
-                                Allergies ou restrictions alimentaires
-                            </label>
-                            <textarea
-                                value={allergies}
-                                onChange={(e) => setAllergies(e.target.value)}
-                                placeholder="Aucune, ou précisez ici..."
-                                className="w-full p-3 mt-2 bg-white border border-[#433F39]/15 rounded-xl focus:outline-none focus:border-[#A8B79D]"
-                                rows={3}
-                            />
-                        </div>
-
-                        {guest.hebergement && (
-                            <div className="p-5 bg-[#A8B79D]/10 rounded-xl text-[#433F39]">
-                                Une chambre vous est réservée au domaine 🌿
-                            </div>
-                        )}
-                    </motion.div>
-                )}
-
-                {presence === "non" && (
-                    <motion.div
-                        key="non"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mt-10 overflow-hidden"
-                    >
-                        <label className="text-sm text-[#433F39]/70">
-                            Un petit mot pour Léo & Manon ? (optionnel)
-                        </label>
-                        <textarea
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            placeholder="On pense fort à vous..."
-                            className="w-full p-3 mt-2 bg-white border border-[#433F39]/15 rounded-xl focus:outline-none focus:border-[#433F39]/40"
-                            rows={3}
-                        />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {presence && (
-                <button
+            <button
                     onClick={submit}
                     disabled={submitting}
                     className="w-full p-4 mt-10 text-white bg-[#A8B79D] rounded-full transition hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
                 >
                     {submitting ? "Envoi..." : "Envoyer ma réponse"}
-                </button>
-            )}
+            </button>
+            {error && <p className="mt-4 text-center text-red-700">{error}</p>}
         </motion.section>
     );
 }

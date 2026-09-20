@@ -5,19 +5,12 @@ import Venue from "./components/Venue";
 import Gallery from "./components/Gallery";
 import RSVP from "./components/RSVP";
 import Footer from "./components/Footer";
-import Loader from "./components/Loader";
 import ScrollToTop from "./components/ScrollToTop";
-import { useGuest } from "./hooks/useGuest";
 
 function App() {
-  const { guest, loading, error } = useGuest();
-
-  if (loading) return <Loader />;
-  if (error) { /* ... inchangé ... */ }
-
   return (
     <>
-      <Hero guest={guest} />
+      <Hero />
       <div id="countdown">
         <Countdown />
       </div>
@@ -25,7 +18,7 @@ function App() {
       <Gallery />
       <Venue />
       <section id="rsvp">
-        {guest ? <RSVP guest={guest} /> : <div className="p-10 text-center">...</div>}
+        <RSVP />
       </section>
       <Footer />
       <ScrollToTop />
