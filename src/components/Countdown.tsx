@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 const WEDDING_DATE = new Date("2027-06-19T00:00:00+02:00");
@@ -31,6 +31,7 @@ function ScratchCard({
     onRevealed: (index: number) => void;
     index: number;
 }) {
+    const clipId = useId();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [revealed, setRevealed] = useState(false);
@@ -158,8 +159,11 @@ function ScratchCard({
     }, [revealed, onRevealed, index]);
 
     return (
-        <div ref={wrapperRef} className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 shrink-0 select-none">
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <div ref={wrapperRef} className="relative aspect-square w-full max-w-32 justify-self-center select-none">
+            <svg width="0" height="0" className="absolute" aria-hidden="true" focusable="false">
+                <defs><clipPath id={clipId} clipPathUnits="objectBoundingBox"><path d={heartPath} transform="scale(0.005)" /></clipPath></defs>
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ clipPath: revealed ? undefined : `url(#${clipId})` }}>
                 <p className="text-2xl md:text-3xl text-[#433F39]">{value}</p>
                 <p className="text-xs uppercase tracking-widest text-[#433F39]/80">{label}</p>
             </div>
@@ -202,7 +206,7 @@ export default function Countdown() {
     return (
         <section id="countdown" className="px-6 py-24 bg-white text-center">
             <h2 className="text-3xl sm:text-5xl text-[#433F39]">Le grand jour approche...</h2>
-            <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-4 md:gap-8 mt-10">
+            <div className="grid grid-cols-3 items-center gap-3 md:gap-8 mt-10 max-w-md mx-auto">
                 {!showDate && dateParts.map((part, i) => (
                     <ScratchCard
                         key={i}
@@ -212,7 +216,7 @@ export default function Countdown() {
                         onRevealed={handleReveal}
                     />
                 ))}
-                {showDate && <p className="text-2xl"><time dateTime="2027-06-19">19 juin 2027</time></p>}
+                {showDate && <p className="col-span-3 text-2xl"><time dateTime="2027-06-19">19 juin 2027</time></p>}
             </div>
             {!allRevealed && <button type="button" onClick={() => setShowDate(true)} className="mt-6 rounded-full border border-[#433F39] px-6 py-3">Afficher la date sans gratter</button>}
             {allRevealed ? (

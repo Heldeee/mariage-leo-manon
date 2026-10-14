@@ -48,6 +48,13 @@ try {
     for (const width of [320, 375, 390, 768, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `Overflow at ${width}px`);
+      if (width === 375 || width === 390) {
+        const heart = await page.locator('#countdown canvas').first().boundingBox();
+        assert(heart.width >= 100, `Small mobile hearts at ${width}px`);
+        const dateText = page.locator('#countdown canvas').first().locator('..').locator('div').first();
+        assert.match(await dateText.evaluate(node => getComputedStyle(node).clipPath), /^url\(/);
+        await page.locator('#countdown').screenshot({ path: `${artifacts}/hearts-${width}.png` });
+      }
       if (width < 768) {
         const box = await page.locator('#programme h3').first().boundingBox();
         assert(box.width > 180, `Narrow programme at ${width}px`);
@@ -190,8 +197,10 @@ try {
     await scratchCard(0);
     await waitUntil(async () => await canvases.first().evaluate(node => node.style.pointerEvents === 'none'), 'First card not revealed');
     assert.equal(await alphaCount(1), partial);
+    const oldSize = await canvases.nth(1).evaluate(canvas => canvas.width * canvas.height);
     await page.setViewportSize({ width: 390, height: 900 });
-    assert.equal(await alphaCount(1), partial);
+    const newSize = await canvases.nth(1).evaluate(canvas => canvas.width * canvas.height);
+    assert(Math.abs((await alphaCount(1)) / newSize - partial / oldSize) < 0.05, 'Resize discarded scratch progress');
     await scratchCard(1); await scratchCard(2);
     await page.getByRole('heading', { name: 'Plus que', exact: true }).waitFor();
   });
