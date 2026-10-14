@@ -7,7 +7,9 @@
     "dev": "vite --host --port 8888 --strictPort",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:ux": "node tests/ux.mjs",
+    "test:rsvp": "node --test tests/rsvp-backend.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -23,6 +25,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.2",
     "@types/node": "^24.13.2",
@@ -33,6 +36,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
     "globals": "^17.7.0",
+    "playwright": "^1.64.0",
     "tailwindcss": "^4.3.2",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.62.0",

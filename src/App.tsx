@@ -7,22 +7,28 @@ import RSVP from "./components/RSVP";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 
+import { MotionConfig } from "framer-motion";
+
+import { useReducedMotion } from "./hooks/useReducedMotion";
+
 function App() {
+  const reducedMotion = useReducedMotion();
   return (
-    <>
+    <MotionConfig reducedMotion={reducedMotion ? "always" : "never"}>
+      <a href="#main" className="skip-link">Aller au contenu</a>
       <Hero />
-      <div id="countdown">
+      <main id="main" tabIndex={-1}>
         <Countdown />
-      </div>
       <Timeline />
       <Gallery />
       <Venue />
       <section id="rsvp">
         <RSVP />
       </section>
+      </main>
       <Footer />
       <ScrollToTop />
-    </>
+    </MotionConfig>
   );
 }
 

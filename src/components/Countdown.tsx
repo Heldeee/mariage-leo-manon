@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
-const WEDDING_DATE = new Date("2027-06-19T00:00:00");
+const WEDDING_DATE = new Date("2027-06-19T00:00:00+02:00");
 
 function getTimeLeft() {
     const diff = WEDDING_DATE.getTime() - Date.now();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const days = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
     return { days };
 }
 
@@ -24,15 +24,18 @@ function ScratchCard({
     value,
     label,
     onRevealed,
+    index,
 }: {
     value: string;
     label: string;
-    onRevealed: () => void;
+    onRevealed: (index: number) => void;
+    index: number;
 }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [revealed, setRevealed] = useState(false);
     const isScratching = useRef(false);
+    const scratchHistory = useRef<{ x: number; y: number }[]>([]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -46,6 +49,7 @@ function ScratchCard({
         const ctx = canvasElement.getContext("2d")!;
         const path = new Path2D(heartPath);
 
+        let mask: Uint8ClampedArray;
         const resize = () => {
             const { clientWidth, clientHeight } = wrapperElement;
             canvasElement.width = clientWidth;
@@ -80,11 +84,14 @@ function ScratchCard({
             ctx.fillRect(0, 0, 200, 200);
 
             ctx.restore();
+            mask = ctx.getImageData(0, 0, canvasElement.width, canvasElement.height).data;
+            for (const point of scratchHistory.current) scratch(point.x * canvasElement.width, point.y * canvasElement.height, false);
         };
         resize();
         window.addEventListener("resize", resize);
 
-        function scratch(x: number, y: number) {
+        function scratch(x: number, y: number, remember = true) {
+            if (remember) scratchHistory.current.push({ x: x / canvasElement.width, y: y / canvasElement.height });
             ctx.globalCompositeOperation = "destination-out";
             ctx.beginPath();
             ctx.arc(x, y, 13, 0, Math.PI * 2);
@@ -102,6 +109,7 @@ function ScratchCard({
             let cleared = 0;
             let total = 0;
             for (let i = 3; i < data.length; i += 4 * 6) {
+                if (mask[i] === 0) continue;
                 total++;
                 if (data[i] === 0) cleared++;
             }
@@ -146,17 +154,21 @@ function ScratchCard({
     }, [onRevealed]);
 
     useEffect(() => {
-        if (revealed) onRevealed();
-    }, [revealed, onRevealed]);
+        if (revealed) onRevealed(index);
+    }, [revealed, onRevealed, index]);
 
     return (
-        <div ref={wrapperRef} className="relative w-28 h-28 md:w-32 md:h-32 select-none">
+        <div ref={wrapperRef} className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 shrink-0 select-none">
             <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <p className="text-2xl md:text-3xl text-[#433F39]">{value}</p>
-                <p className="text-xs uppercase tracking-widest text-[#433F39]/60">{label}</p>
+                <p className="text-xs uppercase tracking-widest text-[#433F39]/80">{label}</p>
             </div>
+            <button type="button" aria-label={`Révéler ${label.toLowerCase()}`} onClick={() => setRevealed(true)} className="absolute inset-0 z-10 rounded-xl" style={{ pointerEvents: "none" }}>
+                <span className="sr-only">{value}</span>
+            </button>
             <motion.canvas
                 ref={canvasRef}
+                aria-hidden="true"
                 animate={{ opacity: revealed ? 0 : 1 }}
                 transition={{ duration: 0.8 }}
                 style={{ pointerEvents: revealed ? "none" : "auto" }}
@@ -168,37 +180,41 @@ function ScratchCard({
 
 export default function Countdown() {
     const [revealed, setRevealed] = useState([false, false, false]);
+    const [showDate, setShowDate] = useState(false);
     const [time, setTime] = useState(getTimeLeft());
 
-    const allRevealed = revealed.every(Boolean);
+    const allRevealed = showDate || revealed.every(Boolean);
 
     useEffect(() => {
         const id = setInterval(() => setTime(getTimeLeft()), 3600000);
         return () => clearInterval(id);
     }, []);
 
-    const handleReveal = (index: number) => {
+    const handleReveal = useCallback((index: number) => {
         setRevealed((prev) => {
             if (prev[index]) return prev; // évite un re-render inutile si déjà révélé
             const next = [...prev];
             next[index] = true;
             return next;
         });
-    };
+    }, []);
 
     return (
         <section id="countdown" className="px-6 py-24 bg-white text-center">
-            <h2 className="text-5xl text-[#433F39]">Le grand jour approche...</h2>
-            <div className="flex justify-center items-center gap-4 md:gap-8 mt-10">
-                {dateParts.map((part, i) => (
+            <h2 className="text-3xl sm:text-5xl text-[#433F39]">Le grand jour approche...</h2>
+            <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-4 md:gap-8 mt-10">
+                {!showDate && dateParts.map((part, i) => (
                     <ScratchCard
                         key={i}
                         value={part.value}
                         label={part.label}
-                        onRevealed={() => handleReveal(i)}
+                        index={i}
+                        onRevealed={handleReveal}
                     />
                 ))}
+                {showDate && <p className="text-2xl"><time dateTime="2027-06-19">19 juin 2027</time></p>}
             </div>
+            {!allRevealed && <button type="button" onClick={() => setShowDate(true)} className="mt-6 rounded-full border border-[#433F39] px-6 py-3">Afficher la date sans gratter</button>}
             {allRevealed ? (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -206,14 +222,14 @@ export default function Countdown() {
                     transition={{ delay: 0.5 }}
                     className="mt-12"
                 >
-                    <h3 className="text-3xl text-[#433F39]">Plus que</h3>
+                    <h3 className="text-3xl text-[#433F39]">{time.days > 0 ? "Plus que" : "Le grand jour est arrivé !"}</h3>
                     <div className="inline-block bg-[#F8F5EF] rounded-xl px-8 py-4 mt-4">
-                        <p className="text-6xl text-[#A8B79D]">{time.days}</p>
-                        <p className="text-sm uppercase tracking-widest text-[#433F39]/60">jours</p>
+                        <p className="text-6xl text-[#433F39]">{time.days}</p>
+                        <p className="text-sm uppercase tracking-widest text-[#433F39]/80">jours</p>
                     </div>
                 </motion.div>
             ) : (
-                <p className="mt-8 text-sm text-[#433F39]/50">Grattez les cœurs pour découvrir la date !</p>
+                <p className="mt-8 text-sm text-[#433F39]/80">Grattez les cœurs pour découvrir la date !</p>
             )}
         </section>
     );

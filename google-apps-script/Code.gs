@@ -5,6 +5,7 @@ const RESPONSE_HEADERS = [
   "prenom",
   "presence",
   "allergenes",
+  "request_id",
 ];
 
 function doPost(e) {
@@ -18,6 +19,10 @@ function doPost(e) {
       throw new Error("La liste des personnes est vide");
     }
 
+    const requestId = String(data.requestId || "").trim();
+    if (requestId && !/^[a-zA-Z0-9-]{1,80}$/.test(requestId)) {
+      throw new Error("Identifiant de requête invalide");
+    }
     const people = data.personnes.map(function (person) {
       const nom = String(person.nom || "").trim();
       const prenom = String(person.prenom || "").trim();
@@ -28,13 +33,18 @@ function doPost(e) {
         throw new Error("Nom, prénom ou présence invalide");
       }
 
-      return [new Date(), nom, prenom, presence, allergenes];
+      return [new Date(), nom, prenom, presence, presence === "oui" ? allergenes : "", requestId];
     });
 
-    const sheet = getOrCreateResponseSheet_();
     const lock = LockService.getScriptLock();
     lock.waitLock(10000);
     try {
+      const sheet = getOrCreateResponseSheet_();
+      if (requestId && sheet.getLastRow() > 1) {
+        const existing = sheet.getRange(2, 6, sheet.getLastRow() - 1, 1)
+          .createTextFinder(requestId).matchEntireCell(true).findNext();
+        if (existing) return jsonResponse_({ status: "success", duplicate: true });
+      }
       const firstRow = sheet.getLastRow() + 1;
       sheet.getRange(firstRow, 1, people.length, RESPONSE_HEADERS.length).setValues(people);
     } finally {
@@ -63,6 +73,9 @@ function getOrCreateResponseSheet_() {
     sheet.setFrozenRows(1);
   }
 
+  if (sheet.getRange(1, 6).getValue() !== "request_id") {
+    sheet.getRange(1, 6).setValue("request_id");
+  }
   return sheet;
 }
 

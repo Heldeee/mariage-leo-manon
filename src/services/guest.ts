@@ -9,9 +9,18 @@ export interface RSVPPerson {
 
 export interface RSVPData {
   personnes: RSVPPerson[];
+  requestId: string;
+}
+
+export class RSVPConfigurationError extends Error {
+  constructor() {
+    super("RSVP API URL is not configured");
+    this.name = "RSVPConfigurationError";
+  }
 }
 
 export async function sendRSVP(data: RSVPData) {
+  if (!API_URL?.trim()) throw new RSVPConfigurationError();
   const response = await fetch(API_URL, {
     method: "POST",
     headers: {
@@ -19,6 +28,7 @@ export async function sendRSVP(data: RSVPData) {
     },
     body: JSON.stringify(data),
     redirect: "follow",
+    signal: AbortSignal.timeout(20000),
   });
   if (!response.ok) {
     throw new Error(`RSVP request failed with status ${response.status}`);

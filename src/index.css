@@ -2,7 +2,7 @@
 
 
 :root {
-  font-family: Inter, sans-serif;
+  font-family: system-ui, sans-serif;
   color: #433F39;
   background: #F8F5EF;
 }
@@ -20,5 +20,14 @@ body {
 
 
 h1,h2,h3 {
-  font-family: "Cormorant Garamond", serif;
+  font-family: Georgia, "Times New Roman", serif;
+}
+:focus-visible { outline: 3px solid #433F39; outline-offset: 4px; }
+header :focus-visible, dialog :focus-visible { outline-color: #F8F5EF; }
+section[id], main[id] { scroll-margin-top: 1rem; }
+.skip-link { position: fixed; top: 1rem; left: 1rem; z-index: 100; padding: 1rem; background: #fff; color: #433F39; transform: translateY(-200%); }
+.skip-link:focus { transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
