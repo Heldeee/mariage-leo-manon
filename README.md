@@ -17,7 +17,7 @@ Renseigner ensuite l’URL du déploiement dans `VITE_API_URL` avant de lancer l
 
 The frontend now requires an explicit attendance choice, includes keyboard-accessible date revelation, accessible photo dialogs, routes for both venues, and response summaries. Retry attempts for the same payload reuse a request ID. The Apps Script stores this ID in column F under a script lock so an acknowledged or unacknowledged successful request is not appended twice. Existing response rows remain unchanged. **Redeploy `google-apps-script/Code.gs` before using the new retry protection in production.**
 
-The hero uses a compressed clip and a WebP poster. Gallery thumbnails are generated separately; original images remain available in the photo viewer. Motion follows the device's reduced-motion preference.
+The hero uses a compressed full-length video (approximately 1 minute 34 seconds) and a WebP poster. Preserve the complete montage when optimizing media; do not trim its duration unless requested. Gallery thumbnails are generated separately; original images remain available in the photo viewer. Motion follows the device's reduced-motion preference.
 
 Run `npm ci`, `npm run lint`, `npm run build`, and `npm run dev`. The local site is served at `http://localhost:8888/mariage-leo-manon/`. Configure `VITE_API_URL` for a test deployment to exercise real submission; local browser tests should intercept that endpoint to avoid writing guest data.
 

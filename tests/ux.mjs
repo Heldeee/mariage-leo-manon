@@ -208,6 +208,8 @@ try {
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.goto(url);
     assert.equal(await page.locator('video').count(), 1);
+    await waitUntil(async () => await page.locator('video').evaluate(video => Number.isFinite(video.duration)), 'Video metadata did not load');
+    assert(Math.abs(await page.locator('video').evaluate(video => video.duration) - 93.82) < 0.1, 'Hero video must retain the full original montage');
     assert.match(await page.locator('header img').getAttribute('src'), /domaine-poster/);
     await page.getByRole('button', { name: 'Mettre la vidéo en pause' }).click();
     await waitUntil(async () => (await page.locator('video').evaluate(video => video.paused)) === true, 'Video did not pause');

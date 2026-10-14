@@ -117,3 +117,8 @@ Local validation passed:
 - `git diff --check` passed. Screenshots are available in `/tmp/wedding-ux-results`.
 
 RSVP and Google Maps were isolated with local fixtures. Real Apps Script delivery, live map accuracy, and imports into actual calendar clients remain unverified. The updated Apps Script must be redeployed to enable production duplicate protection; it adds `request_id` in column F and checks it under the script lock. Full addresses, the RSVP deadline, and practical wedding details still need confirmed content. Dietary drafts are intentionally not persisted in browser storage. No production data was submitted and no deployment was performed.
+
+
+### Correction de la vidéo du hero
+
+La première optimisation avait raccourci le montage à 16 secondes. Cette coupe a été annulée : la version optimisée conserve désormais la durée originale d’environ 93,82 secondes. Les mesures de poids du clip de 16 secondes ci-dessus décrivent uniquement cette ancienne version. Une vérification navigateur de la durée complète protège cette correction. Toute future compression doit conserver le montage intégral, sauf demande explicite de modification du contenu.
