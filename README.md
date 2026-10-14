@@ -35,3 +35,21 @@ The UX suite uses `/bin/google-chrome` when available, or Playwright Chromium ot
 ### Configure real RSVP delivery locally
 
 Copy `.env.example` to `.env.local` and set `VITE_API_URL` to the deployed Google Apps Script web-app URL ending in `/exec`. Restart `npm run dev` after changing environment settings. `.env.local` is ignored by Git. The GitHub Actions secret is only supplied to the deployment build; it does not configure your local server. With a real endpoint configured, manual form submissions will write real rows to that endpoint's spreadsheet.
+
+
+## Notifications email des réponses RSVP
+
+`google-apps-script/Code.gs` envoie un email à `NOTIFICATION_EMAIL` (par défaut, l’adresse de contact du site) après l’enregistrement d’une nouvelle réponse du formulaire. Un envoi regroupant plusieurs personnes produit un seul email avec leurs noms, leur présence et un lien vers la feuille. Les restrictions alimentaires restent dans la feuille et ne sont pas reprises dans l’email. Une nouvelle tentative avec le même `requestId` ne renvoie pas la notification.
+
+Pour activer cette fonctionnalité dans Google Apps Script :
+
+1. Copier la version actuelle de `Code.gs` dans le projet associé à la feuille et vérifier `NOTIFICATION_EMAIL`.
+2. Exécuter `authorizeNotifications` depuis l’éditeur et accepter l’autorisation d’envoi d’emails. Cette fonction ne transmet aucun email de test.
+3. Dans **Déployer → Gérer les déploiements**, modifier le déploiement web existant, sélectionner une **Nouvelle version**, puis déployer. Conserver l’exécution en tant que propriétaire et l’accès nécessaire au formulaire public ; modifier le déploiement existant permet de garder son URL `/exec`.
+4. Vérifier la réception lors de la prochaine vraie réponse. Les tests locaux utilisent un MailApp simulé et n’envoient pas d’emails réels.
+
+Aucun déclencheur `onEdit` n’est nécessaire : l’email est envoyé depuis `doPost`, après l’écriture. Les écritures faites par Apps Script ne déclenchent pas les déclencheurs d’édition de Sheets ; les modifications manuelles de la feuille n’envoient donc pas de notification avec cette implémentation.
+
+L’enregistrement du RSVP reste réussi si l’envoi du mail échoue (autorisation, quota, destinataire). `notificationSent` indique le résultat dans la réponse API. En cas d’échec, `notificationError` fournit un code sans données personnelles (`MAIL_AUTHORIZATION_REQUIRED`, `MAIL_QUOTA_EXCEEDED`, `MAIL_RECIPIENT_INVALID` ou `MAIL_SEND_FAILED`), également ajouté aux journaux d’exécution. Pour un problème d’autorisation, exécuter `authorizeNotifications`, accorder l’autorisation MailApp et redéployer la nouvelle version. Il n’y a pas de nouvelle tentative automatique d’envoi email. Un push GitHub ne met pas à jour ce déploiement Apps Script.
+
+Documentation Google : [MailApp](https://developers.google.com/apps-script/reference/mail/mail-app), [autorisations](https://developers.google.com/apps-script/guides/services/authorization), [restrictions des déclencheurs](https://developers.google.com/apps-script/guides/triggers/installable).

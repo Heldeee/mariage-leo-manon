@@ -47,6 +47,7 @@ try {
   await check('No horizontal overflow at mobile, tablet and desktop sizes', async () => {
     for (const width of [320, 375, 390, 768, 1440]) {
       await page.setViewportSize({ width, height: 900 });
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `Overflow at ${width}px`);
       if (width === 375 || width === 390) {
         const heart = await page.locator('#countdown canvas').first().boundingBox();

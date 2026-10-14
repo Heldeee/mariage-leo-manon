@@ -1,4 +1,5 @@
 const SHEET_REPONSES_FINALES = "Reponse Finales";
+const NOTIFICATION_EMAIL = "leodevin24@gmail.com";
 const RESPONSE_HEADERS = [
   "date_reponse",
   "nom",
@@ -36,10 +37,12 @@ function doPost(e) {
       return [new Date(), nom, prenom, presence, presence === "oui" ? allergenes : "", requestId];
     });
 
+    let responseSheet;
     const lock = LockService.getScriptLock();
     lock.waitLock(10000);
     try {
       const sheet = getOrCreateResponseSheet_();
+      responseSheet = sheet;
       if (requestId && sheet.getLastRow() > 1) {
         const existing = sheet.getRange(2, 6, sheet.getLastRow() - 1, 1)
           .createTextFinder(requestId).matchEntireCell(true).findNext();
@@ -51,7 +54,10 @@ function doPost(e) {
       lock.releaseLock();
     }
 
-    return jsonResponse_({ status: "success" });
+    const notification = sendRSVPNotification_(people, responseSheet);
+    const result = { status: "success", notificationSent: notification.sent };
+    if (notification.error) result.notificationError = notification.error;
+    return jsonResponse_(result);
   } catch (error) {
     return jsonResponse_({
       status: "error",
@@ -83,4 +89,51 @@ function jsonResponse_(payload) {
   return ContentService
     .createTextOutput(JSON.stringify(payload))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+
+// Run once from the editor to grant mail permission, without sending a test email.
+function authorizeNotifications() {
+  return MailApp.getRemainingDailyQuota();
+}
+
+function sendRSVPNotification_(people, sheet) {
+  try {
+    if (MailApp.getRemainingDailyQuota() < 1) {
+      throw new Error("Quota d’envoi épuisé");
+    }
+    const present = people.filter(function (person) { return person[3] === "oui"; }).length;
+    const sheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl() + "#gid=" + sheet.getSheetId();
+    const lines = [
+      "Une nouvelle réponse a été enregistrée pour le mariage de Léo et Manon.",
+      "",
+      "Personnes : " + people.length,
+      "Présent(e)s : " + present + " — Absent(e)s : " + (people.length - present),
+      "",
+    ];
+    people.forEach(function (person) {
+      lines.push("- " + person[2] + " " + person[1] + " : " + (person[3] === "oui" ? "Présent(e)" : "Absent(e)"));
+    });
+    lines.push("", "Consulter les réponses : " + sheetUrl);
+    MailApp.sendEmail({
+      to: NOTIFICATION_EMAIL,
+      subject: "Nouvelle réponse RSVP — Mariage de Léo et Manon",
+      body: lines.join("\n"),
+      name: "Mariage de Léo et Manon",
+    });
+    return { sent: true };
+  } catch (error) {
+    // Saving the RSVP succeeded; a mail failure must not make the guest resubmit.
+    // Keep logs free of names, dietary details and email content.
+    const message = error instanceof Error ? error.message : String(error);
+    const code = /permission|authorization|authoriz|autoris|scope/i.test(message)
+      ? "MAIL_AUTHORIZATION_REQUIRED"
+      : /quota|too many times|limit/i.test(message)
+        ? "MAIL_QUOTA_EXCEEDED"
+        : /recipient|invalid email|invalid argument.*to/i.test(message)
+          ? "MAIL_RECIPIENT_INVALID"
+          : "MAIL_SEND_FAILED";
+    console.error("RSVP enregistré, mais notification email non envoyée : " + code);
+    return { sent: false, error: code };
+  }
 }
